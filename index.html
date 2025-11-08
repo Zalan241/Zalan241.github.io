@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interaktív vizualizációk</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head>
+
+<body>
+  <header>
+    <h1>Interaktív vizualizációk</h1>
+    <p>Három különböző Vega-Lite grafikon reszponzív, modern elrendezéssel.</p>
+  </header>
+
+  <main class="wrapper">
+    <section class="card">
+      <h2>1. Oszlopdiagram</h2>
+      <div id="chart1" class="chart"></div>
+    </section>
+
+    <section class="card">
+      <h2>2. Vonaldiagram</h2>
+      <div id="chart2" class="chart"></div>
+    </section>
+
+    <section class="card">
+      <h2>3. Szórásdiagram</h2>
+      <div id="chart3" class="chart"></div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Készült Vega-Lite segítségével</small>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
