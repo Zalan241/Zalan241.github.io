@@ -1,9 +1,3 @@
-console.log("[init] Vega-Lite loaded:", {
-    vega: typeof vega,
-    vegaLite: typeof vegaLite,
-    vegaEmbed: typeof vegaEmbed
-});
-
 const spec1 = {
   $schema: "https://vega.github.io/schema/vega-lite/v5.json",
   width: "container",
