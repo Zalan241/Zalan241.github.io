@@ -1,108 +1,130 @@
-const spec1 = {
-  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-  width: "container",
-  height: 360,
-  data: {
-    values: [
-      { kateg: "A", érték: 28 },
-      { kateg: "B", érték: 55 },
-      { kateg: "C", érték: 43 },
-      { kateg: "D", érték: 91 },
-      { kateg: "E", érték: 67 },
-      { kateg: "F", érték: 52 },
-      { kateg: "G", érték: 74 },
-      { kateg: "H", érték: 39 }
-    ]
+const COUNTRY = "USA";
+
+const INDICATORS = {
+  gdp: "NY.GDP.MKTP.CD",
+  inflation: "FP.CPI.TOTL.ZG",
+  unemployment: "SL.UEM.TOTL.ZS"
+};
+
+const darkConfig = {
+  background: "#17263a",
+  axis: {
+    labelColor: "#e8eef7",
+    titleColor: "#e8eef7",
+    gridColor: "#2a3f5e",
+    tickColor: "#2a3f5e"
   },
-  params: [
-    {
-      name: "hover",
-      select: { type: "point", on: "mouseover", clear: "mouseout" }
-    }
-  ],
-  mark: {
-    type: "bar",
-    cornerRadiusTopLeft: 4,
-    cornerRadiusTopRight: 4,
-    cursor: "pointer"
+  legend: {
+    labelColor: "#e8eef7",
+    titleColor: "#e8eef7"
   },
-  encoding: {
-    x: { field: "kateg", type: "nominal", title: "Kategória" },
-    y: { field: "érték", type: "quantitative", title: "Érték" },
-    opacity: {
-      condition: { param: "hover", value: 1 },
-      value: 0.85
+  title: { color: "#e8eef7" }
+};
+
+async function fetchWBSeries(country, indicator) {
+  const url = `https://api.worldbank.org/v2/country/${country}/indicator/${indicator}?format=json&per_page=300`;
+  const res = await fetch(url);
+  const json = await res.json();
+  const records = json[1] || [];
+  return records
+    .map(r => ({ year: Number(r.date), value: r.value }))
+    .filter(d => !isNaN(d.year))
+    .sort((a, b) => a.year - b.year);
+}
+
+function sliceByRange(series, range) {
+  if (range === "all") return series.filter(d => d.value != null);
+  const n = Number(range);
+  const clean = series.filter(d => d.value != null);
+  return clean.slice(-n);
+}
+
+function toBillions(x) { return x / 1e9; }
+
+function render(selector, spec) {
+  return vegaEmbed(selector, spec, { actions: false });
+}
+
+async function loadAndRender(range = "all") {
+  const [gdpRaw, inflRaw, unempRaw] = await Promise.all([
+    fetchWBSeries(COUNTRY, INDICATORS.gdp),
+    fetchWBSeries(COUNTRY, INDICATORS.inflation),
+    fetchWBSeries(COUNTRY, INDICATORS.unemployment)
+  ]);
+
+  const gdp = sliceByRange(gdpRaw, range).map(d => ({
+    year: d.year,
+    value: d.value == null ? null : toBillions(d.value)
+  }));
+
+  const infl = sliceByRange(inflRaw, range);
+  const unemp = sliceByRange(unempRaw, range);
+
+  const gdpSorted = [...gdp].sort((a, b) => a.value - b.value);
+
+  const spec1 = {
+    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+    width: "container",
+    height: 360,
+    data: { values: gdpSorted },
+    mark: { type: "bar", cornerRadiusTopLeft: 4, cornerRadiusTopRight: 4 },
+    encoding: {
+      x: { field: "year", type: "ordinal", sort: null, title: "Év (rendezve)" },
+      y: { field: "value", type: "quantitative", title: "GDP (milliárd USD)" },
+      color: { field: "year", type: "nominal", legend: { orient: "right" } },
+      tooltip: [
+        { field: "year", title: "Év" },
+        { field: "value", title: "GDP (mrd USD)", format: ".2f" }
+      ]
     },
-    tooltip: [
-      { field: "kateg", title: "Kategória" },
-      { field: "érték", title: "Érték" }
-    ]
-  }
-};
+    config: darkConfig
+  };
 
-const spec2 = {
-  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-  width: "container",
-  height: 360,
-  data: {
-    values: [
-      { dátum: "2024-01-05", érték: 12 },
-      { dátum: "2024-02-01", érték: 18 },
-      { dátum: "2024-02-28", érték: 24 },
-      { dátum: "2024-03-15", érték: 29 },
-      { dátum: "2024-04-01", érték: 33 },
-      { dátum: "2024-04-25", érték: 37 },
-      { dátum: "2024-05-10", érték: 42 },
-      { dátum: "2024-06-01", érték: 49 }
-    ]
-  },
-  mark: {
-    type: "line",
-    point: { cursor: "pointer" }
-  },
-  encoding: {
-    x: { field: "dátum", type: "temporal", title: "Dátum" },
-    y: { field: "érték", type: "quantitative", title: "Érték" },
-    tooltip: [
-      { field: "dátum", type: "temporal", title: "Dátum" },
-      { field: "érték", type: "quantitative", title: "Érték" }
-    ]
-  }
-};
+  const spec2 = {
+    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+    width: "container",
+    height: 360,
+    data: { values: infl },
+    mark: { type: "line", point: { filled: true } },
+    encoding: {
+      x: { field: "year", type: "ordinal", title: "Év" },
+      y: { field: "value", type: "quantitative", title: "Infláció (%)" },
+      color: { value: "#8bd9ff" },
+      tooltip: [
+        { field: "year", title: "Év" },
+        { field: "value", title: "Infláció (%)", format: ".2f" }
+      ]
+    },
+    config: darkConfig
+  };
 
-const spec3 = {
-  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-  width: "container",
-  height: 360,
-  data: {
-    values: [
-      { x: 10, y: 20 },
-      { x: 15, y: 30 },
-      { x: 22, y: 25 },
-      { x: 28, y: 35 },
-      { x: 32, y: 40 },
-      { x: 36, y: 45 },
-      { x: 40, y: 38 },
-      { x: 45, y: 50 },
-      { x: 50, y: 47 },
-      { x: 55, y: 53 }
-    ]
-  },
-  mark: {
-    type: "circle",
-    size: 150,
-    cursor: "pointer"
-  },
-  encoding: {
-    x: { field: "x", type: "quantitative", title: "X érték" },
-    y: { field: "y", type: "quantitative", title: "Y érték" },
-    tooltip: [
-      { field: "x", title: "X" },
-      { field: "y", title: "Y" }
-    ]
-  }
-};
+  const spec3 = {
+    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+    width: "container",
+    height: 360,
+    data: { values: unemp },
+    mark: { type: "area", interpolate: "monotone" },
+    encoding: {
+      x: { field: "year", type: "ordinal", title: "Év" },
+      y: { field: "value", type: "quantitative", title: "Munkanélküliség (%)" },
+      color: { value: "#7aa0ff" },
+      tooltip: [
+        { field: "year", title: "Év" },
+        { field: "value", title: "Munkanélküliség (%)", format: ".2f" }
+      ]
+    },
+    config: darkConfig
+  };
 
-vegaEmbed("#chart1", spec1);
-vegaEmbed("#chart2", spec2);
-vegaEmbed("#chart3", spec3);
+  await render("#chart1", spec1);
+  await render("#chart2", spec2);
+  await render("#chart3", spec3);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const rangeSelect = document.getElementById("rangeSelect");
+  loadAndRender(rangeSelect.value);
+  rangeSelect.addEventListener("change", () => {
+    loadAndRender(rangeSelect.value);
+  });
+});

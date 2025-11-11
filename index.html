@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Interaktív vizualizációk</title>
+  <title>USA Gazdasági Mutatók – Valós adatok</title>
+
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2318263b'/%3E%3Cpath d='M10 42h44v6H10zM14 16h8v20h-8zM28 24h8v12h-8zM42 20h8v16h-8z' fill='%234b83ff'/%3E%3C/svg%3E">
 
   <link rel="stylesheet" href="style.css" />
 
@@ -13,30 +16,47 @@
 </head>
 
 <body>
-  <header>
-    <h1>Interaktív vizualizációk</h1>
-    <p>Három különböző Vega-Lite grafikon reszponzív, modern elrendezéssel.</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <div>
+        <h1>USA gazdasági vizualizációk</h1>
+      </div>
+
+      <div class="controls">
+        <label for="rangeSelect">Idősáv:</label>
+        <select id="rangeSelect">
+          <option value="10">Utolsó 10 év</option>
+          <option value="25">Utolsó 25 év</option>
+          <option value="50">Utolsó 50 év</option>
+          <option value="all" selected>Összes elérhető</option>
+        </select>
+      </div>
+    </div>
   </header>
 
   <main class="wrapper">
+
     <section class="card">
-      <h2>1. Oszlopdiagram</h2>
+      <h2>1) USA GDP (milliárd USD) – a gazdaság teljesítménye</h2>
       <div id="chart1" class="chart"></div>
     </section>
 
     <section class="card">
-      <h2>2. Vonaldiagram</h2>
+      <h2>2) USA infláció (CPI, %) – az árak éves változása</h2>
       <div id="chart2" class="chart"></div>
     </section>
 
     <section class="card">
-      <h2>3. Szórásdiagram</h2>
+      <h2>3) USA munkanélküliség (%) – a munkát nem találók aránya</h2>
       <div id="chart3" class="chart"></div>
     </section>
+
   </main>
 
   <footer>
-    <small>Készült Vega-Lite segítségével</small>
+    <small>
+      Forrás: World Bank Open Data API (NY.GDP.MKTP.CD, FP.CPI.TOTL.ZG, SL.UEM.TOTL.ZS)
+    </small>
   </footer>
 
   <script src="main.js"></script>
